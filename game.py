@@ -1,7 +1,13 @@
 import os
 import random
 from model import TicTacToeModel
+from modelEasy import TicTacToeModel_Easy
+from modelHard import TicTacToeModel_Hard
 import copy
+import keras
+import tensorflow as tf
+from keras.models import load_model, model_from_json
+
 
 PLAYER_X = 'X'
 PLAYER_O = 'O'
@@ -29,15 +35,49 @@ class Game:
                         return [i, j]
                 
 
+    # def pickMove(self, playerToMove):
+    #     if playerToMove == PLAYER_X_VAL:
+    #         canWin = self.canWin(PLAYER_X_VAL)
+    #         if canWin != None:
+    #             return canWin
+    #     else:
+    #         canWin = self.canWin(PLAYER_O_VAL)
+    #         if canWin != None:
+    #             return canWin
+
+    #     #check if corners are free
+    #     for i in [0,2]:
+    #         for j in [0,2]:
+    #             if self.board[i][j] == 0:
+    #                 return [i, j]
+        
+    #     if self.board[1][1] == 0:
+    #                 return [1, 1]
+
+    #     for i in [0,2]:
+    #         if self.board[i][1] == 0:
+    #                 return [i, 1]
+    #     for j in [0,2]:
+    #         if self.board[1][j] == 0:
+    #             return [1, j]
+
     def pickMove(self, playerToMove):
         if playerToMove == PLAYER_X_VAL:
             canWin = self.canWin(PLAYER_X_VAL)
             if canWin != None:
                 return canWin
+            else :
+                canWin = self.canWin(PLAYER_O_VAL)
+                if canWin != None:
+                    return canWin
         else:
             canWin = self.canWin(PLAYER_O_VAL)
             if canWin != None:
                 return canWin
+            else :
+                canWin = self.canWin(PLAYER_O_VAL)
+                if canWin != None:
+                    return canWin
 
         #check if corners are free
         for i in [0,2]:
@@ -189,20 +229,64 @@ class Game:
             else:
                 #selectedMove = None
                 selectedMove = availableMoves[random.randrange(0, len(availableMoves))]
+                #selectedMove = self.pickMove(playerToMove)
                 #while(selectedMove == None):
-                    #self.printBoard()
-                    #x = input("X-Koordinate (1-3)")
+                #    self.printBoard()
+                #    x = input("X-Koordinate (1-3)")
                     #y = input("Y-Koordinate (1-3)")
-                    #if (availableMoves.__contains__([int(x),int(y)])):
-                        #selectedMove =  [int(x), int(y)]
-                    #if(self.getGameResult(self.board) != GAME_STATE_NOT_ENDED):
-                        #break
+                    # if (x != 0 or x != 1 or x != 2) or (y != 0 or y != 1 or y != 2):
+                    #     selectedMove == None
+                    #     return
+                    # if (availableMoves.__contains__([int(x),int(y)])):
+                    #     selectedMove =  [int(x), int(y)]
+                    # if(self.getGameResult(self.board) != GAME_STATE_NOT_ENDED):
+                    #     return
             self.move(selectedMove, playerToMove)
             if playerToMove == PLAYER_X_VAL:
                 playerToMove = PLAYER_O_VAL
             else:
                 playerToMove = PLAYER_X_VAL
 
+    def simulateNeuralNetworkWithHumanPlayer(self, nnPlayer, model):
+        playerToMove = PLAYER_X_VAL
+        while (self.getGameResult(self.board) == GAME_STATE_NOT_ENDED):
+            availableMoves = self.getAvailableMoves()
+            if playerToMove == nnPlayer:
+                maxValue = 0
+                bestMove = availableMoves[0]
+                for availableMove in availableMoves:
+                    # get a copy of a board
+                    boardCopy = copy.deepcopy(self.board)
+                    boardCopy[availableMove[0]][availableMove[1]] = nnPlayer
+                    if nnPlayer == PLAYER_X_VAL:
+                        value = model.predict(boardCopy, 0)
+                    else:
+                        value = model.predict(boardCopy, 2)
+                    if value > maxValue:
+                        maxValue = value
+                        bestMove = availableMove
+                selectedMove = bestMove
+            else:
+                selectedMove = None
+                #selectedMove = availableMoves[random.randrange(0, len(availableMoves))]
+                selectedMove = self.pickMove(playerToMove)
+                while(selectedMove == None):
+                    self.printBoard()
+                    x = input("X-Koordinate (1-3)")
+                    y = input("Y-Koordinate (1-3)")
+                    if (x != 0 or x != 1 or x != 2) or (y != 0 or y != 1 or y != 2):
+                        selectedMove == None
+                        return
+                    if (availableMoves.__contains__([int(x),int(y)])):
+                        selectedMove =  [int(x), int(y)]
+                    if(self.getGameResult(self.board) != GAME_STATE_NOT_ENDED):
+                        return
+            self.move(selectedMove, playerToMove)
+            if playerToMove == PLAYER_X_VAL:
+                playerToMove = PLAYER_O_VAL
+            else:
+                playerToMove = PLAYER_X_VAL
+        
     def getTrainingHistory(self):
         return self.trainingHistory
 
@@ -243,14 +327,27 @@ class Game:
         print('O Wins: ' + str(int(randomPlayerWins * 100 / totalWins)) + '%')
         print('Draws: ' + str(int(draws * 100 / totalWins)) + '%')
 
-
 if __name__ == "__main__":
     game = Game()
     game.simulateManyGames(1, 5000)
-    ticTacToeModel = TicTacToeModel(9, 3, 100, 32)
-    ticTacToeModel.train(game.getTrainingHistory())
+    ticTacToeModelHard = TicTacToeModel_Hard(9, 3, 100, 32)
+    ticTacToeModelEasy = TicTacToeModel_Easy(9, 3, 100, 32)
+
+    
+    ticTacToeModelHard.train(game.getTrainingHistory())
+    ticTacToeModelEasy.train(game.getTrainingHistory())
+    
     print("Simulating with Neural Network as O Player:")
-    game.simulateManyNeuralNetworkGames(PLAYER_O_VAL, 100, ticTacToeModel)
+    game.simulateManyNeuralNetworkGames(PLAYER_X_VAL, 100, ticTacToeModelHard)
     print ("Simulating with Neural Network as X Player:")
-    game.simulateManyNeuralNetworkGames(PLAYER_X_VAL, 100, ticTacToeModel)
+    game.simulateManyNeuralNetworkGames(PLAYER_X_VAL, 100, ticTacToeModelEasy)
+
+    game.simulateNeuralNetworkWithHumanPlayer(PLAYER_O_VAL, 5, ticTacToeModelEasy)
+    game.simulateNeuralNetworkWithHumanPlayer(PLAYER_O_VAL, 5, ticTacToeModelHard)
+
+    game.simulateNeuralNetworkWithHumanPlayer(PLAYER_X_VAL, 5, ticTacToeModelEasy)
+    game.simulateNeuralNetworkWithHumanPlayer(PLAYER_X_VAL, 5, ticTacToeModelEasy)
+
+
+
     

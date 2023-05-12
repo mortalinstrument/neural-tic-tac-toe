@@ -5,7 +5,7 @@ from keras.utils import to_categorical
 import numpy as np
 
 
-class TicTacToeModel:
+class TicTacToeModel_Easy:
 
     def __init__(self, numberOfInputs, numberOfOutputs, epochs, batchSize):
         self.epochs = epochs
@@ -18,7 +18,7 @@ class TicTacToeModel:
         self.model.add(Dense(128, activation='relu'))
         self.model.add(Dense(128, activation='relu'))
         self.model.add(Dense(numberOfOutputs, activation='softmax'))
-        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss='categorical_crossentropy', optimizer='adagrad', metrics=['accuracy'])
         print(self.model.summary())
 
     def printSummary(self):
@@ -38,7 +38,7 @@ class TicTacToeModel:
         X_train = X[:boundary]
         X_test = X[boundary:]
         y_train = y[:boundary]
-        y_test = y[boundary:]8 
+        y_test = y[boundary:]
         self.model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=self.epochs, batch_size=self.batchSize)
         print(self.model.summary())
 
