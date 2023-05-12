@@ -330,23 +330,17 @@ class Game:
 if __name__ == "__main__":
     game = Game()
     game.simulateManyGames(1, 5000)
-    ticTacToeModelHard = TicTacToeModel_Hard(9, 3, 100, 32)
-    ticTacToeModelEasy = TicTacToeModel_Easy(9, 3, 100, 32)
-
+    ticTacToeModel = TicTacToeModel(9, 3, 100, 32)
     
-    ticTacToeModelHard.train(game.getTrainingHistory())
-    ticTacToeModelEasy.train(game.getTrainingHistory())
+    ticTacToeModel.train(game.getTrainingHistory())
     
     print("Simulating with Neural Network as O Player:")
-    game.simulateManyNeuralNetworkGames(PLAYER_X_VAL, 100, ticTacToeModelHard)
+    game.simulateManyNeuralNetworkGames(PLAYER_O_VAL, 100, ticTacToeModel)
     print ("Simulating with Neural Network as X Player:")
-    game.simulateManyNeuralNetworkGames(PLAYER_X_VAL, 100, ticTacToeModelEasy)
+    game.simulateManyNeuralNetworkGames(PLAYER_X_VAL, 100, ticTacToeModel)
 
-    game.simulateNeuralNetworkWithHumanPlayer(PLAYER_O_VAL, 5, ticTacToeModelEasy)
-    game.simulateNeuralNetworkWithHumanPlayer(PLAYER_O_VAL, 5, ticTacToeModelHard)
-
-    game.simulateNeuralNetworkWithHumanPlayer(PLAYER_X_VAL, 5, ticTacToeModelEasy)
-    game.simulateNeuralNetworkWithHumanPlayer(PLAYER_X_VAL, 5, ticTacToeModelEasy)
+    game.simulateNeuralNetworkWithHumanPlayer(PLAYER_X_VAL, 5, ticTacToeModel)
+    game.simulateNeuralNetworkWithHumanPlayer(PLAYER_O_VAL, 5, ticTacToeModel)
 
 
 
